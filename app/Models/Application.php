@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
@@ -53,6 +54,17 @@ class Application extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /** @return HasMany<ApplicationEvent, $this> */
+    public function events(): HasMany
+    {
+        return $this->hasMany(ApplicationEvent::class);
+    }
+
+    public function tokenMatches(?string $token): bool
+    {
+        return $token && $this->token_hash && hash_equals($this->token_hash, hash('sha256', $token));
     }
 
     /**

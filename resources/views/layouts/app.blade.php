@@ -1,0 +1,54 @@
+@php
+    $menu = [
+        ['DASHBOARD', 'dashboard', 'dashboard'],
+        ['APPS', 'applications.index', 'applications.*'],
+        ['MONITORS', 'monitors.index', 'monitors.*'],
+        ['EVENTS', 'events.index', 'events.*'],
+        ['ALERTS', 'alerts.index', 'alerts.*'],
+        ['NETWORK LAB', 'network-lab', 'network-lab'],
+    ];
+@endphp
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PULSEMONITOR — @yield('title')</title>
+    <link rel="stylesheet" href="{{ asset('pulse/pulse.css') }}">
+    @stack('styles')
+</head>
+<body>
+<div class="app">
+    <header class="topbar">
+        <a class="logo" href="{{ route('dashboard') }}"><span data-ico="heart" data-color="#d6474f" data-size="18"></span>PULSEMONITOR</a>
+        <div class="spacer"></div>
+        <span class="chip hide-sm"><span class="st up"></span><b>SYSTEMS OK</b></span>
+        <span class="chip hide-sm">WS <b id="ws-ping">12ms</b></span>
+        <span class="chip hide-sm" id="clock">--:--</span>
+        <a class="chip" href="{{ route('settings') }}">ARTHUR <b>LV12</b></a>
+    </header>
+
+    <aside class="side">
+        <nav class="box menu">
+            @foreach ($menu as [$label, $route, $pattern])
+                <a href="{{ route($route) }}" @class(['active' => request()->routeIs($pattern)])>
+                    {{ $label }}@if ($label === 'ALERTS')<span class="count">3</span>@endif
+                </a>
+            @endforeach
+            <hr>
+            <a href="{{ route('settings') }}" @class(['active' => request()->routeIs('settings')])>OPTIONS</a>
+            <a href="{{ route('login') }}">EXIT</a>
+        </nav>
+    </aside>
+
+    <main class="main">
+        @yield('content')
+    </main>
+</div>
+
+@stack('modals')
+
+<script src="{{ asset('pulse/pulse.js') }}"></script>
+@stack('scripts')
+</body>
+</html>

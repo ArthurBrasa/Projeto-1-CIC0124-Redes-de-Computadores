@@ -60,7 +60,7 @@
                     ['mobile-bff', 96, 'up'],
                     ['webhook-relay', 62, 'warn'],
                 ] as [$name, $hp, $st])
-                    <a href="{{ route('applications.show') }}" style="grid-template-columns:minmax(0,1fr) auto">
+                    <a href="{{ route('applications.index') }}" style="grid-template-columns:minmax(0,1fr) auto">
                         <div>
                             <div class="name">{{ $name }}</div>
                             <div @class(['hp', 'mid' => $hp < 80 && $hp >= 40, 'low' => $hp < 40])><span>HP</span><div class="bar"><i style="width:{{ $hp }}%"></i></div></div>

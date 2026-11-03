@@ -11,8 +11,8 @@
         </div>
         <nav class="box menu">
             @foreach ([
-                ['PUBLIC STATUS', 'status'], ['LOGIN', 'login'],['REGISTER', 'register'], ['DASHBOARD', 'dashboard'],
-                ['APPS', 'applications.index'], ['NEW APP', 'applications.create'], ['APP DETAILS', 'applications.show'],
+                ['LOGIN', 'login'],['REGISTER', 'register'], ['DASHBOARD', 'dashboard'],
+                ['APPS', 'applications.index'], ['NEW APP', 'applications.create'],
                 ['MONITORS', 'monitors.index'], ['NEW MONITOR', 'monitors.create'], ['MONITOR DETAILS', 'monitors.show'],
                 ['EVENTS', 'events.index'], ['ALERTS', 'alerts.index'], ['NETWORK LAB', 'network-lab'], ['OPTIONS', 'settings'],
             ] as [$label, $route])

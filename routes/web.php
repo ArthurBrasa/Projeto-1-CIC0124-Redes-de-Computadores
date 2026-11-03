@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -26,7 +27,11 @@ Route::group(['middleware' => 'auth'], function () {
     Route::prefix('applications')->name('applications.')->group(function () {
         Route::view('/', 'applications.index')->name('index');
         Route::view('/create', 'applications.create')->name('create');
-        Route::view('/demo', 'applications.show')->name('show');
+        Route::get('/{application}', function (Application $application) {
+            abort_unless($application->user_id === Auth::id(), 404);
+
+            return view('applications.show', ['application' => $application]);
+        })->name('show');
     });
     
     Route::prefix('monitors')->name('monitors.')->group(function () {

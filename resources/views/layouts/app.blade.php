@@ -25,7 +25,7 @@
         <span class="chip hide-sm"><span class="st up"></span><b>SYSTEMS OK</b></span>
         <span class="chip hide-sm">WS <b id="ws-ping">12ms</b></span>
         <span class="chip hide-sm" id="clock">--:--</span>
-        <a class="chip" href="{{ route('settings') }}">ARTHUR <b>LV12</b></a>
+        <a class="chip" href="{{ route('settings') }}">{{auth()->user()->firstName()}} <b>LV1</b></a>
     </header>
 
     <aside class="side">

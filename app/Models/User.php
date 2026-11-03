@@ -7,6 +7,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -41,6 +42,18 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /** @return HasOne<AlertRule, $this> */
+    public function alertRule(): HasOne
+    {
+        return $this->hasOne(AlertRule::class)->withDefault();
+    }
+
+    public function firstName(): string
+    {
+        return Str::before($this->name, ' ');
+    }
+
 
     /**
      * Get the user's initials

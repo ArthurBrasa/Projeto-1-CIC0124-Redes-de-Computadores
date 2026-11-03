@@ -13,7 +13,7 @@
             @foreach ([
                 ['LOGIN', 'login'],['REGISTER', 'register'], ['DASHBOARD', 'dashboard'],
                 ['APPS', 'applications.index'], ['NEW APP', 'applications.create'],
-                ['MONITORS', 'monitors.index'], ['NEW MONITOR', 'monitors.create'], ['MONITOR DETAILS', 'monitors.show'],
+                ['MONITORS', 'monitors.index'], ['NEW MONITOR', 'monitors.create'],
                 ['EVENTS', 'events.index'], ['ALERTS', 'alerts.index'], ['NETWORK LAB', 'network-lab'], ['OPTIONS', 'settings'],
             ] as [$label, $route])
                 <a href="{{ route($route) }}">{{ $label }}</a>

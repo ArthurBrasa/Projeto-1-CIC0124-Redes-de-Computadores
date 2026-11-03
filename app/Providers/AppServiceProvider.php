@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -32,6 +33,13 @@ class AppServiceProvider extends ServiceProvider
     protected function configureDefaults(): void
     {
         Date::use(CarbonImmutable::class);
+
+        // $date->local(): the same moment in the display timezone, for showing to people.
+        $local = function () {
+            return $this->setTimezone(config('app.display_timezone'));
+        };
+        CarbonImmutable::macro('local', $local);
+        Carbon::macro('local', $local);
 
         DB::prohibitDestructiveCommands(
             app()->isProduction(),

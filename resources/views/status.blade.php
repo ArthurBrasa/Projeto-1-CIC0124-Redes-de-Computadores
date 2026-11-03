@@ -2,25 +2,6 @@
 
 @section('title', 'Status')
 
-@php
-    // [name, description, status, uptime 90d, down days, slow days]
-    $groups = [
-        'CORE' => [
-            ['API Gateway', 'api.shop.gg', 'up', '100%', '', '40'],
-            ['Storefront', 'shop.gg', 'up', '99.98%', '', '12,63'],
-            ['Auth', 'Login and sessions', 'up', '100%', '', ''],
-        ],
-        'PAYMENTS' => [
-            ['Payments API', 'Card and PIX payments', 'down', '99.21%', '34,61,89', '45,70'],
-            ['Webhook Relay', 'Outgoing webhooks', 'warn', '99.80%', '', '50,88,89'],
-        ],
-        'PLATFORM' => [
-            ['Notifications', 'E-mail and push', 'up', '99.62%', '22', ''],
-            ['CDN', 'Images and static files', 'up', '100%', '', ''],
-        ],
-    ];
-    $label = ['up' => 'OPERATIONAL', 'warn' => 'SLOW', 'down' => 'DOWN'];
-@endphp
 
 @push('styles')
 <style>
@@ -30,8 +11,7 @@
     .svc:last-child { border-bottom: 0; padding-bottom: 0; }
     .svc:first-of-type { padding-top: 0; }
     .svc-scale { display: flex; justify-content: space-between; margin-top: 8px; font-size: 17px; opacity: .6; }
-    .group + .group { margin-top: 22px; }
-    .incident { padding: 14px 0; border-bottom: 3px dotted var(--paper-3); }
+        .incident { padding: 14px 0; border-bottom: 3px dotted var(--paper-3); }
     .incident:last-child { border-bottom: 0; padding-bottom: 0; }
     .incident:first-of-type { padding-top: 0; }
     .incident .when { font-size: 18px; opacity: .6; margin-top: 4px; }
@@ -49,35 +29,7 @@
         <button class="btn" data-modal="m-sub">SUBSCRIBE</button>
     </div>
 
-    <div class="box dialog mb">
-        <p style="margin:0" data-type><b>PAYMENTS API</b> is down. Our team is working on it. All other systems are running.</p>
-    </div>
-
-    <section class="box mb">
-        <div class="box-title">
-            <h2>SERVICES</h2>
-            <div class="legend"><span><i style="background:var(--hp)"></i>UP</span><span><i style="background:var(--warn)"></i>SLOW</span><span><i style="background:var(--bad)"></i>DOWN</span></div>
-        </div>
-
-        @foreach ($groups as $group => $services)
-            <div class="group">
-                <div class="lbl" style="opacity:.6;margin-bottom:12px">{{ $group }}</div>
-                @foreach ($services as [$name, $desc, $st, $uptime, $down, $slow])
-                    <div class="svc">
-                        <div class="row between">
-                            <div>
-                                <div class="px">{{ $name }}</div>
-                                <div class="small muted">{{ $desc }}</div>
-                            </div>
-                            <span class="st {{ $st }}">{{ $label[$st] }}</span>
-                        </div>
-                        <div class="blocks sm mt" style="margin-top:10px" data-auto="90" data-step="86400000" data-down="{{ $down }}" data-deg="{{ $slow }}"></div>
-                        <div class="svc-scale"><span>90 days ago</span><span>{{ $uptime }} uptime</span><span>today</span></div>
-                    </div>
-                @endforeach
-            </div>
-        @endforeach
-    </section>
+    <livewire:public-status />
 
     <section class="box">
         <div class="box-title"><h2>PAST INCIDENTS</h2></div>

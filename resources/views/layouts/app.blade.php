@@ -52,6 +52,9 @@
 @stack('modals')
 
 <script src="{{ asset('pulse/pulse.js') }}"></script>
+@if (session('toast'))
+<script>PM.toast(@js(session('toast')));</script>
+@endif
 @stack('scripts')
 </body>
 </html>

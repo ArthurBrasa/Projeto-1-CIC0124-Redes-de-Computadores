@@ -170,7 +170,11 @@
     const r = btn.getBoundingClientRect(); const gap = 6, edge = 8;
     list.style.minWidth = r.width + 'px';
     const w = list.offsetWidth, h = list.offsetHeight;
-    list.style.left = Math.max(edge, Math.min(r.left, innerWidth - w - edge)) + 'px';
+    // Left-aligned with the button; if that would pass the surrounding box (or the screen),
+    // align its right edge with the button's right edge instead.
+    const box = btn.closest('.box'); const limit = Math.min(innerWidth - edge, box ? box.getBoundingClientRect().right : innerWidth);
+    const left = r.left + w <= limit ? r.left : r.right - w;
+    list.style.left = Math.max(edge, left) + 'px';
     list.style.top = (r.bottom + gap + h > innerHeight - edge && r.top - gap - h > edge ? r.top - gap - h : r.bottom + gap) + 'px';
   }
   function enhanceSelect(sel) {
@@ -184,10 +188,13 @@
     let active = sel.selectedIndex;
     const render = () => {
       btn.textContent = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : '';
+      const top = list.scrollTop;
       list.innerHTML = [...sel.options].map((o, i) => `<li role="option" data-i="${i}" aria-selected="${i === sel.selectedIndex}" class="${i === active ? 'active' : ''} ${i === sel.selectedIndex ? 'selected' : ''}">${o.text}</li>`).join('');
+      list.scrollTop = top;
     };
+    const showActive = () => { const li = list.querySelector('li.active'); if (li) li.scrollIntoView({ block: 'nearest' }); };
     const isOpen = () => wrap.classList.contains('open');
-    const open = () => { closeSelects(wrap); active = sel.selectedIndex; render(); wrap.classList.add('open'); list.classList.add('open'); placeList(btn, list); };
+    const open = () => { closeSelects(wrap); active = sel.selectedIndex; render(); wrap.classList.add('open'); list.classList.add('open'); placeList(btn, list); showActive(); };
     const close = () => { wrap.classList.remove('open'); list.classList.remove('open'); };
     const choose = i => { sel.selectedIndex = i; sel.dispatchEvent(new Event('input', { bubbles: true })); sel.dispatchEvent(new Event('change', { bubbles: true })); close(); btn.focus(); };
     btn.addEventListener('click', () => (isOpen() ? close() : open()));
@@ -196,7 +203,7 @@
     list.addEventListener('mouseover', e => { const li = e.target.closest('li'); if (li && +li.dataset.i !== active) { active = +li.dataset.i; render(); } });
     btn.addEventListener('keydown', e => {
       const n = sel.options.length;
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); if (!isOpen()) return open(); active = (active + (e.key === 'ArrowDown' ? 1 : n - 1)) % n; render(); }
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); if (!isOpen()) return open(); active = (active + (e.key === 'ArrowDown' ? 1 : n - 1)) % n; render(); showActive(); }
       else if ((e.key === 'Enter' || e.key === ' ') && isOpen()) { e.preventDefault(); choose(active); }
       else if (e.key === 'Escape' || e.key === 'Tab') close();
     });

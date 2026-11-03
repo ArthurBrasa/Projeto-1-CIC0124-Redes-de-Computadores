@@ -56,6 +56,12 @@ class User extends Authenticatable
         return $this->hasMany(Application::class);
     }
 
+    /** @return HasMany<Monitor, $this> */
+    public function monitors(): HasMany
+    {
+        return $this->hasMany(Monitor::class);
+    }
+
     public function firstName(): string
     {
         return Str::before($this->name, ' ');

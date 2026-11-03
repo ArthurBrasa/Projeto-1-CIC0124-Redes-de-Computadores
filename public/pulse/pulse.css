@@ -180,7 +180,7 @@ textarea.input { min-height: 80px; resize: vertical; }
 .select-btn { display: flex; align-items: center; justify-content: space-between; gap: 14px; cursor: pointer; text-align: left; white-space: nowrap; }
 .select-btn::after { content: '▼'; font-size: 12px; }
 .select.open .select-btn::after { content: '▲'; }
-.select-list { display: none; position: fixed; z-index: 150; margin: 0; padding: 12px 10px; list-style: none; max-height: 60vh; overflow-y: auto; }
+.select-list { display: none; position: fixed; z-index: 150; margin: 0; padding: 12px 10px; list-style: none; max-height: min(280px, 60vh); overflow-y: auto; }
 .select-list.open { display: block; }
 .select-list li { position: relative; cursor: pointer; white-space: nowrap; font-family: var(--font-pixel); font-size: 8px; line-height: 1; padding: 10px 12px 10px 22px; }
 .select-list li::before { content: '▶'; position: absolute; left: 6px; visibility: hidden; }
@@ -249,6 +249,7 @@ textarea.input { min-height: 80px; resize: vertical; }
 .tbl td { padding: 9px 10px; border-bottom: 3px dotted var(--paper-3); vertical-align: middle; }
 .tbl tr:last-child td { border-bottom: 0; }
 .tbl tbody tr:hover td { background: var(--paper-2); }
+.tbl tr.clickable { cursor: pointer; }
 .tbl .num { text-align: right; }
 .tbl .name { font-family: var(--font-pixel); font-size: 8px; text-decoration: none; }
 .box.dark .tbl th { border-color: var(--stone); }

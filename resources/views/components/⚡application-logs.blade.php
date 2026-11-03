@@ -29,7 +29,7 @@ new class extends Component
         <div class="log">
             @foreach ($this->events as $event)
                 <div class="line" wire:key="event-{{ $event->id }}">
-                    <span class="ts">{{ $event->created_at->format('H:i:s') }}</span>
+                    <span class="ts">{{ $event->created_at->local()->format('H:i:s') }}</span>
                     <span class="lvl {{ strtoupper($event->level) }}">{{ $event->level === 'warning' ? 'WARN' : strtoupper($event->level) }}</span>
                     <span class="src">{{ $event->source ?? $application->name }}</span>
                     <span>

@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Application;
+use App\Models\Monitor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -36,8 +37,19 @@ Route::group(['middleware' => 'auth'], function () {
     
     Route::prefix('monitors')->name('monitors.')->group(function () {
         Route::view('/', 'monitors.index')->name('index');
-        Route::view('/create', 'monitors.create')->name('create');
-        Route::view('/demo', 'monitors.show')->name('show');
+        Route::view('/create', 'monitors.form')->name('create');
+
+        Route::get('/{monitor}', function (Monitor $monitor) {
+            abort_unless($monitor->user_id === Auth::id(), 404);
+
+            return view('monitors.show', ['monitor' => $monitor]);
+        })->name('show');
+
+        Route::get('/{monitor}/edit', function (Monitor $monitor) {
+            abort_unless($monitor->user_id === Auth::id(), 404);
+
+            return view('monitors.form', ['monitor' => $monitor]);
+        })->name('edit');
     });
     
     Route::view('/events', 'events.index')->name('events.index');

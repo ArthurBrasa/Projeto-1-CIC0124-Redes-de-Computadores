@@ -67,6 +67,9 @@ return [
 
     'timezone' => 'UTC',
 
+    // Dates are stored in UTC (above) and shown to people in this timezone.
+    'display_timezone' => env('APP_DISPLAY_TIMEZONE', 'America/Sao_Paulo'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration

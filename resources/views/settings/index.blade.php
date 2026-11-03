@@ -10,13 +10,7 @@
 </div>
 
 <div class="cols half">
-    <section class="box">
-        <div class="box-title"><h2>PLAYER</h2></div>
-        <div class="field"><label>NAME</label><input class="input" value="Arthur Brasa"></div>
-        <div class="field"><label>E-MAIL</label><input class="input" value="arthur@pulsemonitor.gg"></div>
-        <div class="field"><label>TIMEZONE</label><select class="input"><option>America/Sao_Paulo</option></select></div>
-        <div class="row" style="justify-content:flex-end"><button class="btn primary" data-toast="Game saved!">SAVE</button></div>
-    </section>
+    <livewire:profile />
 
     <section class="box">
         <div class="box-title"><h2>ALERT RULES</h2></div>

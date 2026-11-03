@@ -12,7 +12,7 @@
 </div>
 
 <div class="box dialog mb">
-    <p style="margin:0" data-type>Welcome back, ARTHUR! 11 of 12 systems are running. <b>PAYMENTS</b> is DOWN since 14:03.</p>
+    <p style="margin:0" data-type>Welcome back, {{Auth::user()->name}}! 11 of 12 systems are running. <b>PAYMENTS</b> is DOWN since 14:03.</p>
 </div>
 
 <div class="cols">

@@ -163,6 +163,51 @@
   });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.modal-bg.open').forEach(m => m.classList.remove('open')); });
 
+  /* ---------- Custom select (game menu look, native select kept underneath) ---------- */
+  // The list lives in <body> so the clipped .box corners can't cut it off.
+  function closeSelects(except) { document.querySelectorAll('.select.open').forEach(w => { if (w !== except) { w.classList.remove('open'); w._list.classList.remove('open'); } }); }
+  function placeList(btn, list) {
+    const r = btn.getBoundingClientRect(); const gap = 6, edge = 8;
+    list.style.minWidth = r.width + 'px';
+    const w = list.offsetWidth, h = list.offsetHeight;
+    list.style.left = Math.max(edge, Math.min(r.left, innerWidth - w - edge)) + 'px';
+    list.style.top = (r.bottom + gap + h > innerHeight - edge && r.top - gap - h > edge ? r.top - gap - h : r.bottom + gap) + 'px';
+  }
+  function enhanceSelect(sel) {
+    if (sel.dataset.enhanced) return; sel.dataset.enhanced = '1';
+    const wrap = document.createElement('div'); wrap.className = 'select'; wrap.style.cssText = sel.style.cssText;
+    sel.parentNode.insertBefore(wrap, sel); wrap.appendChild(sel); sel.tabIndex = -1; sel.setAttribute('aria-hidden', 'true');
+    const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'input select-btn'; btn.setAttribute('aria-haspopup', 'listbox');
+    if (sel.id) { btn.id = sel.id; sel.removeAttribute('id'); } // keeps <label for> working
+    const list = document.createElement('ul'); list.className = 'box select-list'; list.setAttribute('role', 'listbox');
+    wrap.append(btn); document.body.appendChild(list); wrap._list = list;
+    let active = sel.selectedIndex;
+    const render = () => {
+      btn.textContent = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : '';
+      list.innerHTML = [...sel.options].map((o, i) => `<li role="option" data-i="${i}" aria-selected="${i === sel.selectedIndex}" class="${i === active ? 'active' : ''} ${i === sel.selectedIndex ? 'selected' : ''}">${o.text}</li>`).join('');
+    };
+    const isOpen = () => wrap.classList.contains('open');
+    const open = () => { closeSelects(wrap); active = sel.selectedIndex; render(); wrap.classList.add('open'); list.classList.add('open'); placeList(btn, list); };
+    const close = () => { wrap.classList.remove('open'); list.classList.remove('open'); };
+    const choose = i => { sel.selectedIndex = i; sel.dispatchEvent(new Event('input', { bubbles: true })); sel.dispatchEvent(new Event('change', { bubbles: true })); close(); btn.focus(); };
+    btn.addEventListener('click', () => (isOpen() ? close() : open()));
+    list.addEventListener('mousedown', e => e.preventDefault());
+    list.addEventListener('click', e => { const li = e.target.closest('li'); if (li) choose(+li.dataset.i); });
+    list.addEventListener('mouseover', e => { const li = e.target.closest('li'); if (li && +li.dataset.i !== active) { active = +li.dataset.i; render(); } });
+    btn.addEventListener('keydown', e => {
+      const n = sel.options.length;
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); if (!isOpen()) return open(); active = (active + (e.key === 'ArrowDown' ? 1 : n - 1)) % n; render(); }
+      else if ((e.key === 'Enter' || e.key === ' ') && isOpen()) { e.preventDefault(); choose(active); }
+      else if (e.key === 'Escape' || e.key === 'Tab') close();
+    });
+    sel.addEventListener('change', render);
+    render();
+  }
+  document.addEventListener('click', e => { if (!e.target.closest('.select, .select-list')) closeSelects(); });
+  window.addEventListener('resize', () => closeSelects());
+  window.addEventListener('scroll', e => { if (!(e.target.closest && e.target.closest('.select-list'))) closeSelects(); }, true);
+  document.querySelectorAll('select.input').forEach(enhanceSelect);
+
   shell();
-  window.PM = { C, icon, lineChart, barChart, live, series, rnd, feed, toast, type };
+  window.PM = { C, icon, lineChart, barChart, live, series, rnd, feed, toast, type, enhanceSelect };
 })();

@@ -25,21 +25,7 @@
             <h2 style="text-align:center">PLAYER LOGIN</h2>
             <p class="small muted" style="text-align:center;margin:8px 0 20px">Insert your credentials.</p>
 
-            <form onsubmit="event.preventDefault(); location.href='{{ route('dashboard') }}'">
-                <div class="field">
-                    <label for="email">E-MAIL</label>
-                    <input class="input" id="email" type="email" value="arthur@pulsemonitor.gg">
-                </div>
-                <div class="field">
-                    <label for="pass">PASSWORD</label>
-                    <input class="input" id="pass" type="password" value="hunter2hunter2">
-                </div>
-                <div class="row between" style="margin-bottom:20px">
-                    <div class="choices"><label><input type="checkbox" checked><span>REMEMBER ME</span></label></div>
-                    <a class="link" href="#" data-toast="A recovery link was sent to your e-mail.">FORGOT PASSWORD?</a>
-                </div>
-                <button class="btn primary block" type="submit">ENTER SYSTEM</button>
-            </form>
+            <livewire:login />
 
             <p class="small" style="text-align:center;margin:18px 0 0">New player? <a class="link" href="{{ route('register') }}">CREATE ACCOUNT</a></p>
         </div>

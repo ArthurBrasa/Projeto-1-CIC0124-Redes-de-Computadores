@@ -37,7 +37,10 @@
             @endforeach
             <hr>
             <a href="{{ route('settings') }}" @class(['active' => request()->routeIs('settings')])>OPTIONS</a>
-            <a href="{{ route('login') }}">EXIT</a>
+            <form method="POST" action="{{ route('logout') }}" style="margin:0">
+                @csrf
+                <a href="{{ route('logout') }}" onclick="event.preventDefault(); this.closest('form').submit()">EXIT</a>
+            </form>
         </nav>
     </aside>
 

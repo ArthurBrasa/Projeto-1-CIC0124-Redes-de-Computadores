@@ -160,6 +160,9 @@ a.chip:hover { color: var(--paper); }
 .field { display: grid; gap: 6px; margin-bottom: 16px; }
 .field label, .lbl { font-family: var(--font-pixel); font-size: 8px; }
 .field .hint { font-size: 17px; opacity: .6; }
+.field .error { font-size: 18px; color: var(--bad); }
+.field .error::before { content: '! '; }
+.btn[disabled] { opacity: .6; cursor: wait; }
 .input {
   width: 100%; font-family: var(--font-body); font-size: 22px; color: var(--ink);
   background: #fffaf0; border: 3px solid var(--ink); padding: 5px 10px; outline: none; border-radius: 0;

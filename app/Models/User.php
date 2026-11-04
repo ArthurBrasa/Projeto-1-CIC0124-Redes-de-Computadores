@@ -62,6 +62,12 @@ class User extends Authenticatable
         return $this->hasMany(Alert::class);
     }
 
+    /** @return HasMany<NetworkExperiment, $this> */
+    public function networkExperiments(): HasMany
+    {
+        return $this->hasMany(NetworkExperiment::class);
+    }
+
     /** @return HasMany<Monitor, $this> */
     public function monitors(): HasMany
     {

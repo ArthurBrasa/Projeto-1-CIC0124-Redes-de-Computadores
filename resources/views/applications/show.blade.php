@@ -4,7 +4,7 @@
 
 @php
     $lastEvent = $application->events()->latest('id')->first();
-    $receiving = $lastEvent && $lastEvent->created_at->gt(now()->subMinutes(10));
+    $status = $application->liveStatus();
 @endphp
 
 @section('content')
@@ -13,12 +13,12 @@
         <a class="back" href="{{ route('applications.index') }}">◀ APPLICATIONS</a>
         <div class="row">
             <h1>{{ strtoupper($application->name) }}</h1>
-            @if ($receiving)
-                <span class="st up">RECEIVING</span>
-            @elseif ($lastEvent)
-                <span class="st warn">QUIET</span>
+            @if ($status === 'up')
+                <span class="st up">ONLINE</span>
+            @elseif ($status === 'down')
+                <span class="st down">DOWN</span>
             @else
-                <span class="st off">WAITING EVENTS</span>
+                <span class="st off">NO SIGNAL</span>
             @endif
         </div>
         <p class="sub">
@@ -35,6 +35,10 @@
 <div class="cols half mb">
     <livewire:application-token :application="$application" />
     <livewire:application-levels :application="$application" />
+</div>
+
+<div class="mb">
+    <livewire:application-monitors :application="$application" />
 </div>
 
 <div class="mb">

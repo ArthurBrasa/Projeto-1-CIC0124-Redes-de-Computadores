@@ -3,7 +3,7 @@
 @section('title', 'Uptime monitors')
 
 @php
-    $monitors = auth()->user()->monitors()->latest()->get();
+    $monitors = auth()->user()->monitors()->with('application:id,name')->latest()->get();
     $active = $monitors->where('is_active', true)->count();
 @endphp
 
@@ -30,7 +30,7 @@
             <tbody>
                 @foreach ($monitors as $monitor)
                     <tr class="clickable" onclick="if (!event.target.closest('a')) location.href='{{ route('monitors.show', $monitor) }}'">
-                        <td><a class="name" href="{{ route('monitors.show', $monitor) }}">{{ $monitor->name }}</a><div class="small muted">{{ $monitor->url }}</div></td>
+                        <td><a class="name" href="{{ route('monitors.show', $monitor) }}">{{ $monitor->name }}</a><div class="small muted">{{ $monitor->url }}@if ($monitor->application) · {{ $monitor->application->name }}@endif</div></td>
                         <td><span class="tag">{{ $monitor->method }}</span></td>
                         <td>
                             @if ($monitor->is_active)

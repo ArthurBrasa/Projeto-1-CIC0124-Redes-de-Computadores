@@ -33,6 +33,7 @@
     </dl>
     <dl class="kv mt">
         <div><dt>URL</dt><dd><code>{{ $monitor->url }}</code></dd></div>
+        <div><dt>APPLICATION</dt><dd>@if ($monitor->application)<a class="link" href="{{ route('applications.show', $monitor->application) }}">{{ strtoupper($monitor->application->name) }}</a>@else<span class="muted">None. <a class="link" href="{{ route('monitors.edit', $monitor) }}">LINK ONE</a></span>@endif</dd></div>
         <div><dt>CREATED</dt><dd>{{ $monitor->created_at->local()->format('M d, Y H:i') }}</dd></div>
     </dl>
 </section>

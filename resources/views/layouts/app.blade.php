@@ -24,7 +24,7 @@
     <header class="topbar">
         <a class="logo" href="{{ route('dashboard') }}"><span data-ico="heart" data-color="#d6474f" data-size="18"></span>PULSEMONITOR</a>
         <div class="spacer"></div>
-        <span class="chip hide-sm"><span class="st up"></span><b>SYSTEMS OK</b></span>
+        <livewire:system-status />
         <span class="chip hide-sm">WS <b data-ws>...</b></span>
         <span class="chip hide-sm" id="clock">--:--</span>
         <a class="chip" href="{{ route('settings') }}">{{auth()->user()->firstName()}} <b>LV1</b></a>

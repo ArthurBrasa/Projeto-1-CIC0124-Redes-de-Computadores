@@ -16,6 +16,7 @@ use Illuminate\Support\Str;
 /**
  * @property int $id
  * @property int $user_id
+ * @property int|null $application_id
  * @property string $name
  * @property string $url
  * @property string $method
@@ -28,7 +29,7 @@ use Illuminate\Support\Str;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['name', 'url', 'method', 'interval_seconds', 'timeout_seconds', 'expected_status', 'is_active', 'is_public'])]
+#[Fillable(['application_id', 'name', 'url', 'method', 'interval_seconds', 'timeout_seconds', 'expected_status', 'is_active', 'is_public'])]
 class Monitor extends Model
 {
     public const METHODS = ['GET', 'POST'];
@@ -69,6 +70,12 @@ class Monitor extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /** @return BelongsTo<Application, $this> */
+    public function application(): BelongsTo
+    {
+        return $this->belongsTo(Application::class);
     }
 
     /** @return MorphMany<Alert, $this> */

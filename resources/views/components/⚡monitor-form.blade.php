@@ -4,6 +4,7 @@ use App\Models\Monitor;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\Rule;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 
 new class extends Component
@@ -17,6 +18,7 @@ new class extends Component
     public int|string $timeout_seconds = 10;
     public int|string $expected_status = 200;
     public bool $is_public = false;
+    public string $application = ''; // application public_id, '' = none
 
     public function mount(?Monitor $monitor = null)
     {
@@ -25,7 +27,22 @@ new class extends Component
 
             $this->monitor = $monitor;
             $this->fill($monitor->only(['name', 'url', 'method', 'interval_seconds', 'timeout_seconds', 'expected_status', 'is_public']));
+            $this->application = $monitor->application?->public_id ?? '';
+        } else {
+            // /monitors/create?application=app_xxx (from the application page)
+            $app = Auth::user()->applications()->where('public_id', request()->query('application'))->first();
+            if ($app) {
+                $this->application = $app->public_id;
+                $this->url = $app->url;
+                $this->name = $app->name;
+            }
         }
+    }
+
+    #[Computed]
+    public function apps()
+    {
+        return Auth::user()->applications()->orderBy('name')->get(['id', 'public_id', 'name']);
     }
 
     protected function rules(): array
@@ -38,6 +55,7 @@ new class extends Component
             'timeout_seconds' => ['required', 'integer', Rule::in(array_keys(Monitor::TIMEOUTS)), 'lt:interval_seconds'],
             'expected_status' => 'required|integer|between:100,599',
             'is_public' => 'boolean',
+            'application' => ['nullable', Rule::exists('applications', 'public_id')->where('user_id', Auth::id())],
         ];
     }
 
@@ -49,6 +67,8 @@ new class extends Component
     public function save()
     {
         $data = $this->validate();
+        $data['application_id'] = $this->apps->firstWhere('public_id', $data['application'])?->id;
+        unset($data['application']);
 
         if ($this->monitor) {
             $this->monitor->update($data);
@@ -132,6 +152,19 @@ new class extends Component
         <label for="status">EXPECTED STATUS CODE</label>
         <input class="input" id="status" type="number" wire:model="expected_status" style="max-width:140px">
         @error('expected_status') <div class="error">{{ $message }}</div> @enderror
+    </div>
+    <div class="field">
+        <label for="application">APPLICATION</label>
+        <div wire:ignore>
+            <select class="input" id="application" wire:model="application">
+                <option value="" @selected($application === '')>None</option>
+                @foreach ($this->apps as $app)
+                    <option value="{{ $app->public_id }}" @selected($application === $app->public_id)>{{ $app->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="hint">Linked apps count as online while this monitor is up, and as down when it fails.</div>
+        @error('application') <div class="error">{{ $message }}</div> @enderror
     </div>
     <div class="field">
         <div class="choices"><label><input type="checkbox" wire:model="is_public"><span>SHOW ON PUBLIC STATUS PAGE</span></label></div>

@@ -3,7 +3,7 @@
 @section('title', 'Applications')
 
 @php
-    $applications = auth()->user()->applications()->latest()->get();
+    $applications = auth()->user()->applications()->with('monitors.latestCheck')->withMax('events', 'created_at')->latest()->get();
 @endphp
 
 @section('content')
@@ -28,10 +28,11 @@
                     <span data-ico="apps" data-size="26"></span>
                     <div>
                         <div class="row" style="gap:10px"><span class="name">{{ $app->name }}</span><span class="tag" style="opacity:.6">{{ strtoupper($app->environment) }}</span></div>
-                        <div class="meta">{{ $app->url }}</div>
+                        <div class="meta">{{ $app->url }}@if ($app->monitors->count()) · {{ $app->monitors->count() }} {{ $app->monitors->count() === 1 ? 'monitor' : 'monitors' }}@endif</div>
                     </div>
                     <div class="right">
-                        <span class="st off">WAITING EVENTS</span>
+                        @php($st = $app->liveStatus())
+                        <span class="st {{ ['up' => 'up', 'down' => 'down', 'idle' => 'off'][$st] }}">{{ ['up' => 'ONLINE', 'down' => 'DOWN', 'idle' => 'NO SIGNAL'][$st] }}</span>
                         <span class="small muted">{{ $app->public_id }}</span>
                     </div>
                 </a>

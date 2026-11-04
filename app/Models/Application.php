@@ -65,6 +65,41 @@ class Application extends Model
         return $this->morphMany(Alert::class, 'alertable');
     }
 
+    /** @return HasMany<Monitor, $this> */
+    public function monitors(): HasMany
+    {
+        return $this->hasMany(Monitor::class);
+    }
+
+    /** Minutes without events after which an app with no monitor stops counting as online. */
+    public const ONLINE_WINDOW_MINUTES = 10;
+
+    /**
+     * 'down'  - a linked monitor's last check failed
+     * 'up'    - linked monitors are up, or (no checked monitor) it sent an event recently
+     * 'idle'  - no signal: no checked monitor and no recent event
+     *
+     * Eager load for lists: ->with('monitors.latestCheck')->withMax('events', 'created_at')
+     */
+    public function liveStatus(): string
+    {
+        $checked = $this->monitors->where('is_active', true)->filter(fn ($m) => $m->latestCheck);
+
+        if ($checked->contains(fn ($m) => ! $m->latestCheck->is_up)) {
+            return 'down';
+        }
+
+        if ($checked->isNotEmpty()) {
+            return 'up';
+        }
+
+        $last = array_key_exists('events_max_created_at', $this->attributes)
+            ? $this->events_max_created_at
+            : $this->events()->max('created_at');
+
+        return $last && Carbon::parse($last)->gt(now()->subMinutes(self::ONLINE_WINDOW_MINUTES)) ? 'up' : 'idle';
+    }
+
     /** @return HasMany<ApplicationEvent, $this> */
     public function events(): HasMany
     {

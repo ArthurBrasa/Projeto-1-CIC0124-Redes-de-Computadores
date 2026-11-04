@@ -31,24 +31,6 @@
 
     <livewire:public-status />
 
-    <section class="box">
-        <div class="box-title"><h2>PAST INCIDENTS</h2></div>
-        <div class="incident">
-            <div class="row between"><span class="px">Payments API unavailable</span><span class="st down">ONGOING</span></div>
-            <div class="when">Today, 14:03</div>
-            <p>Payment requests are timing out. We identified the cause and are applying a fix.</p>
-        </div>
-        <div class="incident">
-            <div class="row between"><span class="px">Slow webhook delivery</span><span class="st up">RESOLVED</span></div>
-            <div class="when">Oct 31, 09:12 · 48 min</div>
-            <p>Webhooks were delayed by up to 5 minutes. All queued events were delivered.</p>
-        </div>
-        <div class="incident">
-            <div class="row between"><span class="px">Payments API unavailable</span><span class="st up">RESOLVED</span></div>
-            <div class="when">Oct 04, 02:11 · 1h 52m</div>
-            <p>A deploy caused errors on checkout. We rolled it back.</p>
-        </div>
-    </section>
 
     <div class="press-start" style="color:var(--dim)">UPDATED <span id="upd">--:--</span> · REFRESHES EVERY 60s</div>
 </div>

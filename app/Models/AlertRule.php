@@ -15,10 +15,12 @@ use Illuminate\Support\Carbon;
  * @property bool $notify_email
  * @property bool $notify_slack
  * @property bool $notify_webhook
+ * @property string|null $slack_webhook_url
+ * @property string|null $webhook_url
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['latency_limit_ms', 'error_rate_limit', 'notify_email', 'notify_slack', 'notify_webhook'])]
+#[Fillable(['latency_limit_ms', 'error_rate_limit', 'notify_email', 'notify_slack', 'notify_webhook', 'slack_webhook_url', 'webhook_url'])]
 class AlertRule extends Model
 {
     /** Defaults for users that never saved their rules. */

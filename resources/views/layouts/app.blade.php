@@ -34,7 +34,7 @@
         <nav class="box menu">
             @foreach ($menu as [$label, $route, $pattern])
                 <a href="{{ route($route) }}" @class(['active' => request()->routeIs($pattern)])>
-                    {{ $label }}@if ($label === 'ALERTS')<span class="count">3</span>@endif
+                    {{ $label }}@if ($label === 'ALERTS')<livewire:alert-badge />@endif
                 </a>
             @endforeach
             <hr>

@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Monitor;
+use App\Support\AlertManager;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -27,4 +28,10 @@ Artisan::command('monitors:check', function () {
     $this->info($due->count().' monitor(s) checked.');
 })->purpose('Check every monitor whose interval has passed');
 
+Artisan::command('alerts:evaluate', function () {
+    AlertManager::checkErrorRates();
+    $this->info('Error rates evaluated.');
+})->purpose('Open or resolve error-rate alerts for every application');
+
 Schedule::command('monitors:check')->everyThirtySeconds()->withoutOverlapping();
+Schedule::command('alerts:evaluate')->everyMinute()->withoutOverlapping();

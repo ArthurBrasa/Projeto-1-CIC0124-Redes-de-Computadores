@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Alert;
 use App\Models\Monitor;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -14,7 +15,10 @@ new class extends Component
         $this->range = $range === 'days' ? 'days' : 'checks';
     }
 
-    protected $listeners = ['echo:status,.monitor.checked' => '$refresh'];
+    protected $listeners = [
+        'echo:status,.monitor.checked' => '$refresh',
+        'echo:status,.alert.changed' => '$refresh',
+    ];
 
     #[Computed]
     public function monitors()
@@ -23,6 +27,19 @@ new class extends Component
             ->where('is_active', true)
             ->with('latestCheck')
             ->orderBy('name')
+            ->get();
+    }
+
+    /** Downtime of public monitors: the last 5 "monitor down" alerts. */
+    #[Computed]
+    public function incidents()
+    {
+        return Alert::where('type', Alert::MONITOR_DOWN)
+            ->where('alertable_type', (new Monitor)->getMorphClass())
+            ->whereIn('alertable_id', $this->monitors->pluck('id'))
+            ->with('alertable')
+            ->latest('started_at')
+            ->limit(5)
             ->get();
     }
 
@@ -117,6 +134,28 @@ new class extends Component
             </div>
         @empty
             <p class="muted" style="margin:0">Nothing to show here yet.</p>
+        @endforelse
+    </section>
+
+    <section class="box">
+        <div class="box-title"><h2>PAST INCIDENTS</h2></div>
+        @forelse ($this->incidents as $incident)
+            <div class="incident" wire:key="inc-{{ $incident->id }}">
+                <div class="row between">
+                    <span class="px">{{ $incident->alertable?->name }} unavailable</span>
+                    @if ($incident->isOpen())
+                        <span class="st down">ONGOING</span>
+                    @else
+                        <span class="st up">RESOLVED</span>
+                    @endif
+                </div>
+                <div class="when">
+                    {{ $incident->started_at->local()->format('M d, H:i') }}
+                    · {{ $incident->isOpen() ? 'for' : 'lasted' }} {{ $incident->duration() }}
+                </div>
+            </div>
+        @empty
+            <p class="muted" style="margin:0">No incidents recorded.</p>
         @endforelse
     </section>
 </div>

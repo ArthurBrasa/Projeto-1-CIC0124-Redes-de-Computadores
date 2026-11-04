@@ -56,6 +56,12 @@ class User extends Authenticatable
         return $this->hasMany(Application::class);
     }
 
+    /** @return HasMany<Alert, $this> */
+    public function alerts(): HasMany
+    {
+        return $this->hasMany(Alert::class);
+    }
+
     /** @return HasMany<Monitor, $this> */
     public function monitors(): HasMany
     {

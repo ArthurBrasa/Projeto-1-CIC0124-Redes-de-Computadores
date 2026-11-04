@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
@@ -39,6 +40,8 @@ class Application extends Model
 
     protected static function booted(): void
     {
+        static::deleting(fn (Application $app) => $app->alerts()->delete());
+
         static::creating(function (Application $app) {
             $app->public_id ??= 'app_'.Str::lower(Str::random(10));
         });
@@ -54,6 +57,12 @@ class Application extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /** @return MorphMany<Alert, $this> */
+    public function alerts(): MorphMany
+    {
+        return $this->morphMany(Alert::class, 'alertable');
     }
 
     /** @return HasMany<ApplicationEvent, $this> */

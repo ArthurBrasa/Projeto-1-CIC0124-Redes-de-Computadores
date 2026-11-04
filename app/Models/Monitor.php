@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use App\Support\AlertManager;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -57,10 +59,22 @@ class Monitor extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        // alerts point here polymorphically (no foreign key), so remove them by hand
+        static::deleting(fn (Monitor $monitor) => $monitor->alerts()->delete());
+    }
+
     /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /** @return MorphMany<Alert, $this> */
+    public function alerts(): MorphMany
+    {
+        return $this->morphMany(Alert::class, 'alertable');
     }
 
     /** @return HasMany<MonitorCheck, $this> */
@@ -100,7 +114,9 @@ class Monitor extends Model
             $result['is_up'] = $response->status() === $this->expected_status;
             $result['error'] = $result['is_up'] ? null : 'Expected '.$this->expected_status.', got '.$response->status();
         } catch (\Throwable $e) {
-            $result['error'] = Str::limit($e->getMessage(), 250);
+            // "cURL error 7: Failed to connect ... (see https://curl.se/...) for http://..." -> "Failed to connect ..."
+            $message = Str::of($e->getMessage())->before(' (see ')->replaceMatches('/^cURL error \d+: /', '');
+            $result['error'] = Str::limit((string) $message, 250);
         }
 
         $result['response_ms'] = (int) round((microtime(true) - $started) * 1000);
@@ -108,6 +124,8 @@ class Monitor extends Model
 
         $check = $this->checks()->create($result);
         $this->forceFill(['last_checked_at' => $check->checked_at])->saveQuietly();
+
+        AlertManager::checkMonitor($this, $check);
 
         return $check;
     }

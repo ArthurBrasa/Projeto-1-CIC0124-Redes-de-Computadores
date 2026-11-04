@@ -33,7 +33,10 @@
     rows.forEach((row, y) => { for (let x = 0; x < 16; x++) if (row[x] === '1') r += `<rect x="${x}" y="${y}" width="1" height="1"/>`; });
     return `<svg class="ico pixel-ico" viewBox="0 0 16 16" width="${s}" height="${s}" fill="${color || 'currentColor'}" shape-rendering="crispEdges">${r}</svg>`;
   }
-  document.querySelectorAll('[data-ico]').forEach(el => { el.innerHTML = icon(el.dataset.ico, el.dataset.color, el.dataset.size); });
+  const drawIcons = () => document.querySelectorAll('[data-ico]').forEach(el => { if (!el.firstElementChild) el.innerHTML = icon(el.dataset.ico, el.dataset.color, el.dataset.size); });
+  drawIcons();
+  // Livewire re-renders replace the markup with empty icon spans: draw them again.
+  new MutationObserver(drawIcons).observe(document.body, { childList: true, subtree: true });
 
   /* ---------- Topbar clock / ws ping ---------- */
   function shell() {

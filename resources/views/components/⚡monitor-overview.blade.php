@@ -16,6 +16,20 @@ new class extends Component
         $this->load();
     }
 
+    public function getListeners()
+    {
+        return ['echo-private:App.Models.User.'.auth()->id().',.monitor.checked' => 'onCheck'];
+    }
+
+    public function onCheck(array $payload = [])
+    {
+        if (($payload['monitor_id'] ?? null) !== $this->monitor->id) {
+            return $this->skipRender();
+        }
+
+        $this->load();
+    }
+
     public function load()
     {
         unset($this->latest, $this->recent, $this->lastChecks, $this->stats, $this->history, $this->incidents);
@@ -96,7 +110,7 @@ new class extends Component
 };
 ?>
 
-<div wire:poll.30s="load" class="stack">
+<div class="stack">
     {{-- summary --}}
     <div class="box dialog">
         <p style="margin:0">

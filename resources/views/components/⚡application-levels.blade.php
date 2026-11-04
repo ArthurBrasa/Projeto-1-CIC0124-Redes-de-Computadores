@@ -26,12 +26,24 @@ new class extends Component
         ];
     }
 
+    public function getListeners()
+    {
+        return ['echo-private:App.Models.User.'.auth()->id().',.application-event.received' => 'onEvent'];
+    }
+
+    public function onEvent(array $payload = [])
+    {
+        if (($payload['application_id'] ?? null) !== $this->application->id) {
+            $this->skipRender();
+        }
+    }
+
     #[On('event-created')]
     public function refresh() {}
 };
 ?>
 
-<section class="box" wire:poll.10s>
+<section class="box">
     <div class="box-title"><h2>EVENTS BY LEVEL</h2><span class="px muted">24H</span></div>
     <dl class="stats">
         <div><dt>INFO</dt><dd>{{ number_format($this->counts['info']) }}</dd></div>

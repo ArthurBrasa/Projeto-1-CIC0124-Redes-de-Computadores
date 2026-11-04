@@ -15,13 +15,25 @@ new class extends Component
         return $this->application->events()->latest('id')->limit(10)->get();
     }
 
+    public function getListeners()
+    {
+        return ['echo-private:App.Models.User.'.auth()->id().',.application-event.received' => 'onEvent'];
+    }
+
+    public function onEvent(array $payload = [])
+    {
+        if (($payload['application_id'] ?? null) !== $this->application->id) {
+            $this->skipRender();
+        }
+    }
+
     #[On('event-created')]
     public function refresh() {}
 };
 ?>
 
-<section class="box dark" wire:poll.5s>
-    <div class="box-title"><h2>RECENT LOGS</h2><a class="link" href="{{ route('events.index') }}">ALL EVENTS</a></div>
+<section class="box dark">
+    <div class="box-title"><h2>RECENT LOGS</h2><a class="link" href="{{ route('events.index', ['app' => $application->public_id]) }}">ALL EVENTS</a></div>
 
     @if ($this->events->isEmpty())
         <p class="muted" style="margin:0">No events yet. Send one to the webhook or press TEST INTEGRATION.</p>

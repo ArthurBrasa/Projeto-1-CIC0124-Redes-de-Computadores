@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Events\MonitorChecked;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -30,6 +31,10 @@ class MonitorCheck extends Model
             'checked_at' => 'datetime',
         ];
     }
+
+    protected $dispatchesEvents = [
+        'created' => MonitorChecked::class,
+    ];
 
     /** @return BelongsTo<Monitor, $this> */
     public function monitor(): BelongsTo

@@ -17,6 +17,20 @@ new class extends Component
         $this->load();
     }
 
+    public function getListeners()
+    {
+        return ['echo-private:App.Models.User.'.auth()->id().',.application-event.received' => 'onEvent'];
+    }
+
+    public function onEvent(array $payload = [])
+    {
+        if (($payload['application_id'] ?? null) !== $this->application->id) {
+            return $this->skipRender();
+        }
+
+        $this->load();
+    }
+
     #[On('event-created')]
     public function load()
     {
@@ -40,7 +54,7 @@ new class extends Component
 };
 ?>
 
-<section class="box" wire:poll.15s="load">
+<section class="box">
     <div class="box-title"><h2>EVENTS PER MINUTE</h2><span class="px muted">LAST 60 MIN</span></div>
     <div class="chart" wire:ignore><canvas></canvas></div>
 </section>

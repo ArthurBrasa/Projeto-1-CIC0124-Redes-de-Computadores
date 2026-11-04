@@ -14,6 +14,8 @@ new class extends Component
         $this->range = $range === 'days' ? 'days' : 'checks';
     }
 
+    protected $listeners = ['echo:status,.monitor.checked' => '$refresh'];
+
     #[Computed]
     public function monitors()
     {
@@ -36,7 +38,7 @@ new class extends Component
 };
 ?>
 
-<div wire:poll.60s>
+<div>
     <div class="box dialog mb">
         <p style="margin:0">
             @if ($this->monitors->isEmpty())

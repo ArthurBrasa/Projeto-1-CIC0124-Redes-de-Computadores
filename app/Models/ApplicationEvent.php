@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Events\ApplicationEventReceived;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -30,6 +31,10 @@ class ApplicationEvent extends Model
             'created_at' => 'datetime',
         ];
     }
+
+    protected $dispatchesEvents = [
+        'created' => ApplicationEventReceived::class,
+    ];
 
     /** @return BelongsTo<Application, $this> */
     public function application(): BelongsTo

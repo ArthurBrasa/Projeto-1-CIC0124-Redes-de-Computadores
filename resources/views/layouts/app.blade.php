@@ -13,9 +13,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>PULSEMONITOR — @yield('title')</title>
     <link rel="stylesheet" href="{{ asset('pulse/pulse.css') }}">
     @stack('styles')
+    @vite('resources/js/app.js')
 </head>
 <body>
 <div class="app">
@@ -23,7 +25,7 @@
         <a class="logo" href="{{ route('dashboard') }}"><span data-ico="heart" data-color="#d6474f" data-size="18"></span>PULSEMONITOR</a>
         <div class="spacer"></div>
         <span class="chip hide-sm"><span class="st up"></span><b>SYSTEMS OK</b></span>
-        <span class="chip hide-sm">WS <b id="ws-ping">12ms</b></span>
+        <span class="chip hide-sm">WS <b data-ws>...</b></span>
         <span class="chip hide-sm" id="clock">--:--</span>
         <a class="chip" href="{{ route('settings') }}">{{auth()->user()->firstName()}} <b>LV1</b></a>
     </header>

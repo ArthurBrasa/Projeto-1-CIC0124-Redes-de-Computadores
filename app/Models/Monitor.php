@@ -2,15 +2,16 @@
 
 namespace App\Models;
 
+use App\Support\AlertManager;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
-use App\Support\AlertManager;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 /**
@@ -130,6 +131,10 @@ class Monitor extends Model
         $result['checked_at'] = now();
 
         $check = $this->checks()->create($result);
+
+        if (! $check->is_up) {
+            Log::channel('protocol')->warning('monitor.check.failed', ['monitor' => $this->id, 'url' => $this->url, 'status' => $check->status_code, 'error' => $check->error, 'ms' => $check->response_ms]);
+        }
         $this->forceFill(['last_checked_at' => $check->checked_at])->saveQuietly();
 
         AlertManager::checkMonitor($this, $check);

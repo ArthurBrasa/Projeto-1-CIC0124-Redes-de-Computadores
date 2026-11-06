@@ -8,7 +8,9 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Http\Client\Pool;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -18,14 +20,18 @@ use Throwable;
  *  - dns   = name lookup time
  *  - rtt   = TCP handshake (connect_time - namelookup_time): one network round trip
  *  - ttfb  = time to first byte
- *  - total = whole request
- * Every request uses a new connection, so each one includes a fresh TCP handshake.
+ *  - total = whole request (DNS + connect + TLS + server + transfer)
+ * Every request opens a new connection, so each one includes a fresh TCP handshake.
+ *
+ * A) RTT          N sequential requests -> mean, median, std dev, p95, jitter, loss
+ * B) Throughput   C parallel clients for D seconds per payload size -> req/s and goodput (body bytes/s)
+ * C) Concurrency  for each level (e.g. 1, 2, 5 clients) run D seconds -> delay and message rate
  */
 class RunNetworkExperiment implements ShouldQueue
 {
     use Queueable;
 
-    public int $timeout = 80;
+    public int $timeout = 600;
 
     public int $tries = 1;
 
@@ -39,6 +45,7 @@ class RunNetworkExperiment implements ShouldQueue
     {
         $e = $this->experiment;
         $e->forceFill(['status' => 'running', 'progress' => 0, 'started_at' => now()])->save();
+        Log::channel('protocol')->info('lab.experiment.started', ['id' => $e->id, 'type' => $e->type, 'target' => $e->target_url, 'params' => $e->params]);
 
         try {
             match ($e->type) {
@@ -48,6 +55,7 @@ class RunNetworkExperiment implements ShouldQueue
             };
 
             $e->forceFill(['status' => 'done', 'progress' => 100, 'finished_at' => now()])->save();
+            Log::channel('protocol')->info('lab.experiment.done', ['id' => $e->id, 'results' => $e->results]);
         } catch (Throwable $ex) {
             $this->failed($ex);
         }
@@ -60,9 +68,11 @@ class RunNetworkExperiment implements ShouldQueue
             'error' => Str::limit($ex?->getMessage() ?? 'Unknown error', 250),
             'finished_at' => now(),
         ])->save();
+
+        Log::channel('protocol')->error('lab.experiment.failed', ['id' => $this->experiment->id, 'error' => $ex?->getMessage()]);
     }
 
-    /* ---------------- RTT: sequential requests, one new connection each ---------------- */
+    /* ---------------- A) RTT: sequential requests, one new connection each ---------------- */
 
     private function rtt(NetworkExperiment $e): void
     {
@@ -93,111 +103,187 @@ class RunNetworkExperiment implements ShouldQueue
             $diffs[] = abs($rtt[$i] - $rtt[$i - 1]);
         }
 
+        $sent = count($samples);
+
         return [
-            'samples' => count($samples),
+            'samples' => $sent,
             'received' => count($ok),
-            'loss' => count($samples) ? round((count($samples) - count($ok)) / count($samples) * 100, 1) : 0,
-            'rtt_avg' => $rtt ? round(array_sum($rtt) / count($rtt), 2) : null,
+            'http_errors' => count(array_filter($ok, fn ($s) => ($s['status'] ?? 0) >= 400)),
+            'loss' => $sent ? round(($sent - count($ok)) / $sent * 100, 1) : 0,
+            'rtt_avg' => self::mean($rtt),
+            'rtt_median' => self::median($rtt),
+            'rtt_stddev' => self::stddev($rtt),
+            'rtt_p95' => self::percentile($rtt, 95),
             'rtt_min' => $rtt ? min($rtt) : null,
             'rtt_max' => $rtt ? max($rtt) : null,
             'jitter' => $diffs ? round(array_sum($diffs) / count($diffs), 2) : 0,
-            'dns_avg' => $ok ? round(array_sum(array_column($ok, 'dns')) / count($ok), 2) : null,
-            'ttfb_avg' => $ok ? round(array_sum(array_column($ok, 'ttfb')) / count($ok), 2) : null,
-            'total_avg' => $total ? round(array_sum($total) / count($total), 2) : null,
+            'dns_avg' => self::mean(array_column($ok, 'dns')),
+            'ttfb_avg' => self::mean(array_column($ok, 'ttfb')),
+            'total_avg' => self::mean($total),
+            'total_median' => self::median($total),
+            'total_stddev' => self::stddev($total),
         ];
     }
 
-    /* ---------------- Throughput: N parallel clients for X seconds ---------------- */
+    /* ---------------- B) Throughput: C parallel clients, D seconds per payload size ---------------- */
 
     private function throughput(NetworkExperiment $e): void
     {
         $clients = $e->params['clients'];
         $duration = $e->params['duration'];
-        $perSecond = array_fill(0, $duration, 0);
-        $bytes = 0;
-        $done = 0;
-        $errors = 0;
-        $times = [];
-        $start = microtime(true);
+        $sizes = $e->params['sizes'] ?? [null]; // null = the target URL as it is
+        $steps = [];
 
-        while (($elapsed = microtime(true) - $start) < $duration) {
-            foreach ($this->burst($e->target_url, $clients) as $r) {
-                $second = min($duration - 1, (int) floor(microtime(true) - $start));
+        foreach ($sizes as $index => $size) {
+            $url = $size ? $this->payloadUrl($e->target_url, $size) : $e->target_url;
 
-                if ($r['ok']) {
-                    $done++;
-                    $bytes += $r['bytes'];
-                    $times[] = $r['total'];
-                    $perSecond[$second]++;
-                } else {
-                    $errors++;
-                }
-            }
-
-            $elapsed = microtime(true) - $start;
-            $e->samples = ['per_second' => $perSecond];
-            $e->results = [
-                'clients' => $clients,
-                'duration' => round($elapsed, 1),
-                'requests' => $done,
-                'errors' => $errors,
-                'req_per_sec' => round($done / max($elapsed, 0.001), 1),
-                'bytes_per_sec' => (int) round($bytes / max($elapsed, 0.001)),
-                'avg_ms' => $times ? round(array_sum($times) / count($times), 1) : null,
-            ];
-            $e->progress = min(99, (int) floor($elapsed / $duration * 100));
-            $this->save($e);
+            $steps[$index] = $this->load($url, $clients, $duration, $size, function (array $step, float $part) use ($e, &$steps, $index, $sizes, $size) {
+                $steps[$index] = $step + ['size' => $size];
+                $e->samples = ['steps' => array_values($steps)];
+                $e->results = $this->throughputSummary(array_values($steps), $e);
+                $e->progress = min(99, (int) floor(($index + $part) / count($sizes) * 100));
+                $this->save($e);
+            }) + ['size' => $size];
         }
+
+        $e->samples = ['steps' => array_values($steps)];
+        $e->results = $this->throughputSummary(array_values($steps), $e);
     }
 
-    /* ---------------- Concurrency: response time as parallel clients grow ---------------- */
+    private function throughputSummary(array $steps, NetworkExperiment $e): array
+    {
+        $last = end($steps) ?: [];
+
+        return [
+            'clients' => $e->params['clients'],
+            'duration' => $e->params['duration'],
+            'sizes' => count($steps),
+            'requests' => array_sum(array_column($steps, 'requests')),
+            'errors' => array_sum(array_column($steps, 'errors')),
+            // last step, used by the KPI tiles
+            'size' => $last['size'] ?? null,
+            'req_per_sec' => $last['req_per_sec'] ?? null,
+            'bytes_per_sec' => $last['goodput'] ?? null,
+            'avg_ms' => $last['avg_ms'] ?? null,
+            'best_goodput' => $steps ? max(array_column($steps, 'goodput')) : null,
+        ];
+    }
+
+    /* ---------------- C) Concurrency: compare levels such as 1, 2 and 5 clients ---------------- */
 
     private function concurrency(NetworkExperiment $e): void
     {
-        $max = $e->params['clients'];
-        $levels = collect([1, $max / 4, $max / 2, $max * 3 / 4, $max])
-            ->map(fn ($v) => max(1, (int) ceil($v)))->unique()->sort()->values();
-
+        $levels = $e->params['levels'] ?? [1, 2, 5];
+        $duration = $e->params['duration'] ?? 5;
         $steps = [];
 
-        foreach ($levels as $i => $level) {
-            $results = $this->burst($e->target_url, $level);
-            $ok = array_filter($results, fn ($r) => $r['ok']);
-            $times = array_column($ok, 'total');
-
-            $steps[] = [
-                'clients' => $level,
-                'avg_ms' => $times ? round(array_sum($times) / count($times), 1) : null,
-                'max_ms' => $times ? max($times) : null,
-                'errors' => count($results) - count($ok),
-            ];
-
-            $last = end($steps);
-            $first = $steps[0];
-            $e->samples = ['steps' => $steps];
-            $e->results = [
-                'max_clients' => $level,
-                'avg_at_one' => $first['avg_ms'],
-                'avg_at_max' => $last['avg_ms'],
-                'slowdown' => $first['avg_ms'] && $last['avg_ms'] ? round($last['avg_ms'] / $first['avg_ms'], 1) : null,
-                'errors' => array_sum(array_column($steps, 'errors')),
-            ];
-            $e->progress = (int) floor(($i + 1) / $levels->count() * 100);
-            $this->save($e);
+        foreach ($levels as $index => $clients) {
+            $steps[$index] = $this->load($e->target_url, $clients, $duration, null, function (array $step, float $part) use ($e, &$steps, $index, $levels) {
+                $steps[$index] = $step;
+                $e->samples = ['steps' => array_values($steps)];
+                $e->results = $this->concurrencySummary(array_values($steps));
+                $e->progress = min(99, (int) floor(($index + $part) / count($levels) * 100));
+                $this->save($e);
+            });
 
             usleep(300_000);
         }
+
+        $e->samples = ['steps' => array_values($steps)];
+        $e->results = $this->concurrencySummary(array_values($steps));
     }
 
-    /* ---------------- helpers ---------------- */
+    private function concurrencySummary(array $steps): array
+    {
+        $first = $steps[0] ?? [];
+        $last = end($steps) ?: [];
 
-    /** One request with timing; ok = the server answered (any HTTP status). */
+        return [
+            'levels' => array_column($steps, 'clients'),
+            'max_clients' => $last['clients'] ?? null,
+            'avg_at_one' => $first['avg_ms'] ?? null,
+            'avg_at_max' => $last['avg_ms'] ?? null,
+            'rate_at_max' => $last['req_per_sec'] ?? null,
+            'slowdown' => ! empty($first['avg_ms']) && ! empty($last['avg_ms']) ? round($last['avg_ms'] / $first['avg_ms'], 2) : null,
+            'errors' => array_sum(array_column($steps, 'errors')),
+        ];
+    }
+
+    /* ---------------- shared load loop ---------------- */
+
+    /**
+     * Keep $clients parallel requests going for $duration seconds.
+     * A response only counts when its status is below 400 and, for payload tests,
+     * its body has exactly the requested size. Anything else is an error, so a 404
+     * page can never be mistaken for goodput. No valid response at all fails the experiment.
+     * Calls $progress(step, fraction) while running; returns the final step.
+     */
+    private function load(string $url, int $clients, int $duration, ?int $expectedBytes, callable $progress): array
+    {
+        $lastProblem = 'no response';
+        $perSecond = array_fill(0, $duration, 0);
+        $times = [];
+        $bytes = 0;
+        $errors = 0;
+        $start = microtime(true);
+
+        $step = function () use ($clients, &$perSecond, &$times, &$bytes, &$errors, $start) {
+            $elapsed = max(microtime(true) - $start, 0.001);
+            $done = count($times);
+
+            return [
+                'clients' => $clients,
+                'elapsed' => round($elapsed, 2),
+                'requests' => $done,
+                'errors' => $errors,
+                'req_per_sec' => round($done / $elapsed, 1),
+                'goodput' => (int) round($bytes / $elapsed),   // payload bytes per second
+                'avg_ms' => self::mean($times),
+                'median_ms' => self::median($times),
+                'p95_ms' => self::percentile($times, 95),
+                'stddev_ms' => self::stddev($times),
+                'per_second' => $perSecond,
+            ];
+        };
+
+        while (microtime(true) - $start < $duration) {
+            foreach ($this->burst($url, $clients) as $r) {
+                $valid = $r['ok'] && $r['status'] < 400 && ($expectedBytes === null || $r['bytes'] === $expectedBytes);
+
+                if ($valid) {
+                    $times[] = $r['total'];
+                    $bytes += $r['bytes'];
+                    $perSecond[min($duration - 1, (int) floor(microtime(true) - $start))]++;
+                } else {
+                    $errors++;
+                    $lastProblem = $r['ok'] ? 'HTTP '.$r['status'].', '.$r['bytes'].' bytes' : 'no response';
+                }
+            }
+
+            $progress($step(), min(1, (microtime(true) - $start) / $duration));
+        }
+
+        if (! $times) {
+            throw new RuntimeException("No valid response from {$url} (last: {$lastProblem}). Payload sizes need a target running PULSEMONITOR.");
+        }
+
+        return $step();
+    }
+
+    /** /api/v1/lab/payload on the target's host (the target must run PULSEMONITOR). */
+    private function payloadUrl(string $target, int $bytes): string
+    {
+        $p = parse_url($target);
+        $base = ($p['scheme'] ?? 'http').'://'.($p['host'] ?? 'localhost').(isset($p['port']) ? ':'.$p['port'] : '');
+
+        return $base.'/api/v1/lab/payload?bytes='.$bytes;
+    }
+
+    /** One request with timing; ok = the server answered (any HTTP status), so the round trip happened. */
     private function request(string $url): array
     {
         try {
-            $response = Http::timeout(self::REQUEST_TIMEOUT)->withUserAgent('PULSEMONITOR NetworkLab')->get($url);
-
-            return $this->timing($response);
+            return $this->timing(Http::timeout(self::REQUEST_TIMEOUT)->withUserAgent('PULSEMONITOR NetworkLab')->get($url));
         } catch (Throwable) {
             return ['ok' => false];
         }
@@ -237,5 +323,43 @@ class RunNetworkExperiment implements ShouldQueue
             $e->save();
             $this->lastSave = microtime(true);
         }
+    }
+
+    /* ---------------- statistics ---------------- */
+
+    public static function mean(array $v): ?float
+    {
+        return $v ? round(array_sum($v) / count($v), 2) : null;
+    }
+
+    public static function median(array $v): ?float
+    {
+        return self::percentile($v, 50);
+    }
+
+    /** Sample standard deviation (n - 1). */
+    public static function stddev(array $v): ?float
+    {
+        $n = count($v);
+        if ($n < 2) {
+            return $n ? 0.0 : null;
+        }
+        $m = array_sum($v) / $n;
+
+        return round(sqrt(array_sum(array_map(fn ($x) => ($x - $m) ** 2, $v)) / ($n - 1)), 2);
+    }
+
+    /** Linear interpolation between closest ranks. */
+    public static function percentile(array $v, float $p): ?float
+    {
+        if (! $v) {
+            return null;
+        }
+        sort($v);
+        $rank = ($p / 100) * (count($v) - 1);
+        $lo = (int) floor($rank);
+        $hi = (int) ceil($rank);
+
+        return round($v[$lo] + ($v[$hi] - $v[$lo]) * ($rank - $lo), 2);
     }
 }

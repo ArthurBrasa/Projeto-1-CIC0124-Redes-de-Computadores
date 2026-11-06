@@ -1,0 +1,67 @@
+# docker compose up --build   ->   http://localhost:8000
+# APP_KEY and REVERB_* below are public demo values for local use only.
+x-app: &app
+  build: .
+  image: pulsemonitor
+  environment: &env
+    APP_NAME: PULSEMONITOR
+    APP_ENV: local
+    APP_DEBUG: "false"
+    APP_KEY: base64:cHVsc2Vtb25pdG9yLWRlbW8ta2V5LWZvci1sYWJzLTE=
+    APP_URL: http://localhost:8000
+    DEMO_MONITOR_URL: http://web:8000/up # inside the containers, "localhost" is not the site
+    DB_CONNECTION: sqlite
+    DB_DATABASE: /app/database/data/database.sqlite
+    SESSION_DRIVER: database
+    CACHE_STORE: database
+    QUEUE_CONNECTION: database
+    MAIL_MAILER: log
+    LOG_CHANNEL: stderr
+    BROADCAST_CONNECTION: reverb
+    REVERB_APP_ID: "100001"
+    REVERB_APP_KEY: pulse-demo-key
+    REVERB_APP_SECRET: pulse-demo-secret
+    REVERB_HOST: reverb
+    REVERB_PORT: "8080"
+    REVERB_SCHEME: http
+    REVERB_SERVER_HOST: 0.0.0.0
+    REVERB_SERVER_PORT: "8080"
+  volumes:
+    - db:/app/database/data
+    - logs:/app/storage/logs
+
+services:
+  web:
+    <<: *app
+    environment:
+      <<: *env
+      RUN_MIGRATIONS: "1"
+      PHP_CLI_SERVER_WORKERS: "4"
+    command: php artisan serve --host=0.0.0.0 --port=8000 --no-reload
+    ports: ["${WEB_PORT:-8000}:8000"]
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1:8000/up') ? 0 : 1);"]
+      interval: 3s
+      retries: 40
+  reverb:
+    <<: *app
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    ports: ["${WS_PORT:-8080}:8080"]
+    depends_on: { web: { condition: service_healthy } }
+  queue:
+    <<: *app
+    command: php artisan queue:work --tries=1 --timeout=600
+    depends_on: { web: { condition: service_healthy } }
+  scheduler:
+    <<: *app
+    command: php artisan schedule:work
+    depends_on: { web: { condition: service_healthy } }
+  sockets:
+    <<: *app
+    command: php artisan lab:socket-server --port=9601
+    ports: ["${SOCKET_PORT:-9601}:9601/tcp", "${SOCKET_PORT:-9601}:9601/udp"]
+    depends_on: { web: { condition: service_healthy } }
+
+volumes:
+  db:
+  logs:

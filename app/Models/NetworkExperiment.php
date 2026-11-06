@@ -29,7 +29,9 @@ use Illuminate\Support\Carbon;
 class NetworkExperiment extends Model
 {
     public const RTT = 'rtt';
+
     public const THROUGHPUT = 'throughput';
+
     public const CONCURRENCY = 'concurrency';
 
     public const TYPES = [self::RTT, self::THROUGHPUT, self::CONCURRENCY];
@@ -73,8 +75,11 @@ class NetworkExperiment extends Model
 
         return match ($this->type) {
             self::RTT => ($p['samples'] ?? '?').' samples',
-            self::THROUGHPUT => ($p['clients'] ?? '?').' clients · '.($p['duration'] ?? '?').'s',
-            self::CONCURRENCY => 'up to '.($p['clients'] ?? '?').' clients',
+            self::THROUGHPUT => ($p['clients'] ?? '?').' clients · '.($p['duration'] ?? '?').'s · '
+                .implode('/', array_map(fn ($b) => $b ? self::bytes($b) : 'target', $p['sizes'] ?? [null])),
+            self::CONCURRENCY => isset($p['levels'])
+                ? implode(', ', $p['levels']).' clients · '.($p['duration'] ?? '?').'s each'
+                : 'up to '.($p['clients'] ?? '?').' clients',
             default => '',
         };
     }
@@ -92,11 +97,33 @@ class NetworkExperiment extends Model
         }
 
         return match ($this->type) {
-            self::RTT => ($r['rtt_avg'] ?? '—').'ms avg RTT · '.($r['loss'] ?? 0).'% loss',
-            self::THROUGHPUT => ($r['req_per_sec'] ?? '—').' req/s · '.self::bytes($r['bytes_per_sec'] ?? 0).'/s',
-            self::CONCURRENCY => ($r['avg_at_max'] ?? '—').'ms at '.($r['max_clients'] ?? '?').' clients',
+            self::RTT => ($r['rtt_median'] ?? '—').'ms median RTT · σ '.($r['rtt_stddev'] ?? '—').'ms · '.($r['loss'] ?? 0).'% loss',
+            self::THROUGHPUT => ($r['sizes'] ?? 1) > 1
+                ? 'best '.self::bytes($r['best_goodput'] ?? 0).'/s over '.$r['sizes'].' sizes'
+                : ($r['req_per_sec'] ?? '—').' req/s · '.self::bytes($r['bytes_per_sec'] ?? 0).'/s',
+            self::CONCURRENCY => ($r['avg_at_one'] ?? '—').'ms → '.($r['avg_at_max'] ?? '—').'ms at '.($r['max_clients'] ?? '?').' clients',
             default => '',
         };
+    }
+
+    /** Raw samples (RTT) or steps (throughput, concurrency) as CSV rows, header first. */
+    public function csvRows(): array
+    {
+        if ($this->type === self::RTT) {
+            $rows = [['sample', 'ok', 'status', 'dns_ms', 'rtt_ms', 'ttfb_ms', 'total_ms', 'bytes']];
+            foreach ($this->samples ?? [] as $i => $s) {
+                $rows[] = [$i + 1, $s['ok'] ? 1 : 0, $s['status'] ?? '', $s['dns'] ?? '', $s['rtt'] ?? '', $s['ttfb'] ?? '', $s['total'] ?? '', $s['bytes'] ?? ''];
+            }
+
+            return $rows;
+        }
+
+        $rows = [['step', 'size_bytes', 'clients', 'elapsed_s', 'requests', 'errors', 'req_per_sec', 'goodput_bytes_per_sec', 'avg_ms', 'median_ms', 'p95_ms', 'stddev_ms']];
+        foreach ($this->samples['steps'] ?? [] as $i => $s) {
+            $rows[] = [$i + 1, $s['size'] ?? '', $s['clients'] ?? '', $s['elapsed'] ?? '', $s['requests'] ?? '', $s['errors'] ?? '', $s['req_per_sec'] ?? '', $s['goodput'] ?? '', $s['avg_ms'] ?? '', $s['median_ms'] ?? '', $s['p95_ms'] ?? '', $s['stddev_ms'] ?? ''];
+        }
+
+        return $rows;
     }
 
     public static function bytes(float|int $b): string

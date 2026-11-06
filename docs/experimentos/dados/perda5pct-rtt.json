@@ -1,0 +1,28 @@
+{
+    "condition": "perda5pct",
+    "type": "rtt",
+    "target": "http://lab-server:8000/up",
+    "params": {
+        "samples": 50
+    },
+    "started_at": "2026-11-05T22:49:41+00:00",
+    "finished_at": "2026-11-05T22:49:52+00:00",
+    "results": {
+        "samples": 50,
+        "received": 50,
+        "http_errors": 0,
+        "loss": 0,
+        "rtt_avg": 144.03,
+        "rtt_median": 0.33,
+        "rtt_stddev": 359.91,
+        "rtt_p95": 1017.14,
+        "rtt_min": 0.09,
+        "rtt_max": 1057.99,
+        "jitter": 127.63,
+        "dns_avg": 1.23,
+        "ttfb_avg": 174.88,
+        "total_avg": 175.15,
+        "total_median": 11.22,
+        "total_stddev": 370.18
+    }
+}

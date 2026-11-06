@@ -1,0 +1,227 @@
+{
+  "info": {
+    "name": "PULSEMONITOR protocol",
+    "description": "Two independent clients and every error case of the webhook protocol. Use the Collection Runner to send many messages.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000"
+    },
+    {
+      "key": "client_a_id",
+      "value": "app_sensorlaba"
+    },
+    {
+      "key": "client_a_token",
+      "value": "pm_demo_sensor_a_0000000000000000000000000"
+    },
+    {
+      "key": "client_b_id",
+      "value": "app_sensorlabb"
+    },
+    {
+      "key": "client_b_token",
+      "value": "pm_demo_sensor_b_0000000000000000000000000"
+    }
+  ],
+  "item": [
+    {
+      "name": "Client A: info event (202)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/api/v1/hooks/{{client_a_id}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"level\": \"info\",\n  \"message\": \"Temperature reading\",\n  \"source\": \"sensor-a\",\n  \"payload\": {\n    \"temperature_c\": 23.4\n  }\n}"
+        },
+        "description": "",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{client_a_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Client B: error event (202)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/api/v1/hooks/{{client_b_id}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"level\": \"error\",\n  \"message\": \"Sensor offline\",\n  \"source\": \"sensor-b\",\n  \"payload\": {\n    \"code\": \"E42\"\n  }\n}"
+        },
+        "description": "",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{client_b_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Wrong token (401)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/api/v1/hooks/{{client_a_id}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"level\": \"info\", \"message\": \"x\"}"
+        },
+        "description": "",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "wrong-token",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Other client token (401)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/api/v1/hooks/{{client_a_id}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"level\": \"info\", \"message\": \"x\"}"
+        },
+        "description": "",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{client_b_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Malformed JSON (400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/api/v1/hooks/{{client_a_id}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"level\": \"info\", message}"
+        },
+        "description": "",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{client_a_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Invalid fields (422)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/api/v1/hooks/{{client_a_id}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"level\": \"fatal\"}"
+        },
+        "description": "",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{client_a_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Unknown application (404)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/api/v1/hooks/app_missing",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"level\": \"info\", \"message\": \"x\"}"
+        },
+        "description": "",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{client_a_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

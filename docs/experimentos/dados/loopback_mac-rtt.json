@@ -1,0 +1,28 @@
+{
+    "condition": "loopback_mac",
+    "type": "rtt",
+    "target": "http://localhost:8000/up",
+    "params": {
+        "samples": 50
+    },
+    "started_at": "2026-11-05T22:53:00+00:00",
+    "finished_at": "2026-11-05T22:53:03+00:00",
+    "results": {
+        "samples": 50,
+        "received": 50,
+        "http_errors": 0,
+        "loss": 0,
+        "rtt_avg": 0.36,
+        "rtt_median": 0.33,
+        "rtt_stddev": 0.12,
+        "rtt_p95": 0.55,
+        "rtt_min": 0.2,
+        "rtt_max": 0.68,
+        "jitter": 0.08,
+        "dns_avg": 0.02,
+        "ttfb_avg": 7.27,
+        "total_avg": 7.43,
+        "total_median": 7.23,
+        "total_stddev": 2.69
+    }
+}

@@ -1,0 +1,9 @@
+date_utc=2026-11-05T22:47:51Z
+Linux 6.12.68-linuxkit
+docker 29.2.1
+PHP 8.4.27 (cli) (built: Nov  5 2026 07:24:31) (NTS)
+eth0@if98        UP             172.20.0.3/16 
+=== base: qdisc noqueue 0: root refcnt 2 
+=== atraso50ms: qdisc netem 8003: root refcnt 13 limit 100000 delay 50ms  10ms
+=== perda5pct: qdisc netem 8003: root refcnt 13 limit 100000 loss 5%
+=== atraso50ms_perda5pct: qdisc netem 8003: root refcnt 13 limit 100000 delay 50ms  10ms loss 5%

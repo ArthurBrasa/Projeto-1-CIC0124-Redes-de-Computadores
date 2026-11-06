@@ -27,7 +27,7 @@
         <livewire:system-status />
         <span class="chip hide-sm">WS <b data-ws>...</b></span>
         <span class="chip hide-sm" id="clock">--:--</span>
-        <a class="chip" href="{{ route('settings') }}">{{auth()->user()->firstName()}} <b>LV1</b></a>
+        <a class="chip" href="{{ route('settings') }}">{{auth()->user()->firstName()}}</a>
     </header>
 
     <aside class="side">

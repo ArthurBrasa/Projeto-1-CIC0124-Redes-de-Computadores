@@ -1,0 +1,4 @@
+step,size_bytes,clients,elapsed_s,requests,errors,req_per_sec,goodput_bytes_per_sec,avg_ms,median_ms,p95_ms,stddev_ms
+1,,1,5.05,42,0,8.3,15199,118.11,118.01,129.27,7.32
+2,,2,5.01,86,0,17.1,31339,111.97,111.86,124.79,7.5
+3,,5,5.05,210,0,41.6,76009,110.05,109.63,121.59,6.85

@@ -1,0 +1,28 @@
+{
+    "condition": "base",
+    "type": "concurrency",
+    "target": "http://lab-server:8000/up",
+    "params": {
+        "levels": [
+            1,
+            2,
+            5
+        ],
+        "duration": 5
+    },
+    "started_at": "2026-11-05T22:48:15+00:00",
+    "finished_at": "2026-11-05T22:48:31+00:00",
+    "results": {
+        "levels": [
+            1,
+            2,
+            5
+        ],
+        "max_clients": 5,
+        "avg_at_one": 2.1,
+        "avg_at_max": 4.15,
+        "rate_at_max": 671,
+        "slowdown": 1.98,
+        "errors": 0
+    }
+}

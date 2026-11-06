@@ -1,0 +1,28 @@
+{
+    "condition": "perda5pct",
+    "type": "concurrency",
+    "target": "http://lab-server:8000/up",
+    "params": {
+        "levels": [
+            1,
+            2,
+            5
+        ],
+        "duration": 5
+    },
+    "started_at": "2026-11-05T22:50:16+00:00",
+    "finished_at": "2026-11-05T22:50:33+00:00",
+    "results": {
+        "levels": [
+            1,
+            2,
+            5
+        ],
+        "max_clients": 5,
+        "avg_at_one": 67.24,
+        "avg_at_max": 47.34,
+        "rate_at_max": 24.3,
+        "slowdown": 0.7,
+        "errors": 0
+    }
+}

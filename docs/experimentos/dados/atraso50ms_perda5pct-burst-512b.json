@@ -1,0 +1,36 @@
+[
+    {
+        "proto": "tcp",
+        "mode": "burst",
+        "sent": 2000,
+        "received": 2000,
+        "loss": 0,
+        "out_of_order": 0,
+        "rtt_mean": 506.69,
+        "rtt_median": 482.56,
+        "rtt_stddev": 234.76,
+        "rtt_p95": 889.8,
+        "msgs_per_sec": 273.8,
+        "payload_kb_s": 136.9,
+        "connect_ms": 51.914,
+        "size": 512,
+        "condition": "atraso50ms_perda5pct"
+    },
+    {
+        "proto": "udp",
+        "mode": "burst",
+        "sent": 2000,
+        "received": 1902,
+        "loss": 4.9,
+        "out_of_order": 1876,
+        "rtt_mean": 50.67,
+        "rtt_median": 50.51,
+        "rtt_stddev": 5.81,
+        "rtt_p95": 59.97,
+        "msgs_per_sec": 30119.5,
+        "payload_kb_s": 15059.7,
+        "connect_ms": "\u2014",
+        "size": 512,
+        "condition": "atraso50ms_perda5pct"
+    }
+]

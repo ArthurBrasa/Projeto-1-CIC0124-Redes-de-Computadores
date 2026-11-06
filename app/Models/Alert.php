@@ -30,11 +30,15 @@ use Illuminate\Support\Carbon;
 class Alert extends Model
 {
     public const MONITOR_DOWN = 'monitor_down';
+
     public const LATENCY = 'latency';
+
     public const ERROR_RATE = 'error_rate';
 
     public const ACTIVE = 'active';
+
     public const ACKNOWLEDGED = 'acknowledged';
+
     public const RESOLVED = 'resolved';
 
     /** Live updates for the alerts page, menu badge... */

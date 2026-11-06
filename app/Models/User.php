@@ -79,7 +79,6 @@ class User extends Authenticatable
         return Str::before($this->name, ' ');
     }
 
-
     /**
      * Get the user's initials
      */

@@ -1,0 +1,28 @@
+{
+    "condition": "atraso50ms",
+    "type": "rtt",
+    "target": "http://lab-server:8000/up",
+    "params": {
+        "samples": 50
+    },
+    "started_at": "2026-11-05T22:48:32+00:00",
+    "finished_at": "2026-11-05T22:48:41+00:00",
+    "results": {
+        "samples": 50,
+        "received": 50,
+        "http_errors": 0,
+        "loss": 0,
+        "rtt_avg": 53.01,
+        "rtt_median": 52.49,
+        "rtt_stddev": 6.09,
+        "rtt_p95": 62.17,
+        "rtt_min": 41.7,
+        "rtt_max": 64.47,
+        "jitter": 7.07,
+        "dns_avg": 0.94,
+        "ttfb_avg": 115.71,
+        "total_avg": 115.98,
+        "total_median": 115.9,
+        "total_stddev": 9.36
+    }
+}

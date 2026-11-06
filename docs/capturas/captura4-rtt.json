@@ -1,0 +1,28 @@
+{
+    "condition": "captura4",
+    "type": "rtt",
+    "target": "http://cap-server:8000/up",
+    "params": {
+        "samples": 30
+    },
+    "started_at": "2026-11-05T22:54:57+00:00",
+    "finished_at": "2026-11-05T22:55:06+00:00",
+    "results": {
+        "samples": 30,
+        "received": 30,
+        "http_errors": 0,
+        "loss": 0,
+        "rtt_avg": 154.54,
+        "rtt_median": 52.69,
+        "rtt_stddev": 310.21,
+        "rtt_p95": 1067.05,
+        "rtt_min": 43.26,
+        "rtt_max": 1074.29,
+        "jitter": 216.62,
+        "dns_avg": 1.25,
+        "ttfb_avg": 219.64,
+        "total_avg": 255.03,
+        "total_median": 125.66,
+        "total_stddev": 362.17
+    }
+}

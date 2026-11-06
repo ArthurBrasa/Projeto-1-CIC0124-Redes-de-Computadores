@@ -65,6 +65,16 @@ return [
             'replace_placeholders' => true,
         ],
 
+        // Application protocol log: webhook messages, rejections, WebSocket
+        // disconnections, monitor failures, alerts and Network Lab runs.
+        'protocol' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/protocol.log'),
+            'level' => 'debug',
+            'days' => 14,
+            'replace_placeholders' => true,
+        ],
+
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),

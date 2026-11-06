@@ -1,0 +1,29 @@
+{
+    "condition": "atraso50ms",
+    "type": "throughput",
+    "target": "http://lab-server:8000",
+    "params": {
+        "clients": 5,
+        "duration": 5,
+        "sizes": [
+            1024,
+            10240,
+            102400,
+            1048576
+        ]
+    },
+    "started_at": "2026-11-05T22:48:41+00:00",
+    "finished_at": "2026-11-05T22:49:01+00:00",
+    "results": {
+        "clients": 5,
+        "duration": 5,
+        "sizes": 4,
+        "requests": 560,
+        "errors": 0,
+        "size": 1048576,
+        "req_per_sec": 9.7,
+        "bytes_per_sec": 10148501,
+        "avg_ms": 408.44,
+        "best_goodput": 10148501
+    }
+}

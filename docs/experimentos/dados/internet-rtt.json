@@ -1,0 +1,28 @@
+{
+    "condition": "internet",
+    "type": "rtt",
+    "target": "https://apps.dataverso.net/up",
+    "params": {
+        "samples": 50
+    },
+    "started_at": "2026-11-05T22:53:03+00:00",
+    "finished_at": "2026-11-05T22:53:08+00:00",
+    "results": {
+        "samples": 50,
+        "received": 50,
+        "http_errors": 0,
+        "loss": 0,
+        "rtt_avg": 7.61,
+        "rtt_median": 7.33,
+        "rtt_stddev": 1.16,
+        "rtt_p95": 9.56,
+        "rtt_min": 5.52,
+        "rtt_max": 9.76,
+        "jitter": 1.29,
+        "dns_avg": 2.46,
+        "ttfb_avg": 49.7,
+        "total_avg": 49.95,
+        "total_median": 49.66,
+        "total_stddev": 4.3
+    }
+}

@@ -9,6 +9,7 @@ use App\Models\Monitor;
 use App\Models\MonitorCheck;
 use App\Notifications\AlertNotification;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Opens and resolves alerts. There is at most one open alert per (subject, type):
@@ -24,6 +25,7 @@ class AlertManager
 
     /** Window and minimum volume for the error rate. */
     public const ERROR_WINDOW_MINUTES = 15;
+
     public const ERROR_MIN_EVENTS = 20;
 
     /** Called after every monitor check. */
@@ -125,6 +127,7 @@ class AlertManager
             'started_at' => now(),
         ]);
 
+        Log::channel('protocol')->notice('alert.opened', ['alert' => $alert->id, 'type' => $type, 'title' => $title, 'details' => $details]);
         $alert->user->notify(new AlertNotification($alert, 'opened'));
 
         return $alert;
@@ -139,6 +142,7 @@ class AlertManager
         }
 
         $alert->update(['status' => Alert::RESOLVED, 'resolved_at' => now()]);
+        Log::channel('protocol')->notice('alert.resolved', ['alert' => $alert->id, 'type' => $type, 'duration' => $alert->duration()]);
 
         $alert->user->notify(new AlertNotification($alert, 'resolved'));
     }
